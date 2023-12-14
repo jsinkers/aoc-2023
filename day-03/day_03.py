@@ -20,6 +20,30 @@ def is_part_number(line, position, symbols):
     
     return False
         
+def get_gear_ratio(line, position, candidate_part_nums):
+    gear_ratio = 0
+    # get part nums on the line before, current line, and the line after
+    can_part_nums_before = candidate_part_nums[line-1] if line > 0 else []
+    can_part_nums_current = candidate_part_nums[line]
+    can_part_nums_after = candidate_part_nums[line+1] if line < len(candidate_part_nums) - 1 else []
+    part_nums_to_check = can_part_nums_before + can_part_nums_current + can_part_nums_after
+
+    # find all part numbers that are adjacent to this gear symbol
+    adj_part_nums = []
+    for part_num, part_span in part_nums_to_check:
+        start, end = part_span
+        if start - 1 <= position <= end:
+            adj_part_nums.append(part_num)
+
+    # check if a valid gear: exactly 2 part numbers
+    if len(adj_part_nums) == 2:
+        gear_ratio = adj_part_nums[0] * adj_part_nums[1]
+        #print(f"Valid gear ({line}, {position}): {adj_part_nums[0]}, {adj_part_nums[1]}. Ratio: {gear_ratio}")
+    else:
+        #print(f"Invalid gear ({line}, {position}): {part_nums[0]}, {part_nums[1]}. Ratio: {gear_ratio}")
+        pass
+
+    return gear_ratio
 
 def part_1(lines):
     total = 0
@@ -60,6 +84,30 @@ def part_1(lines):
     
 def part_2(lines):
     total = 0
+    candidate_part_nums = []
+    symbols = []
+    # extract all numbers from lines
+    for line in lines:
+        line = line.strip()
+        line_part_nums = []
+        for match in re.finditer(r"\d+", line):
+            line_part_nums.append((int(match.group()), match.span()))
+        
+        candidate_part_nums.append(line_part_nums)
+    
+    # extract all * symbols from lines
+    for line in lines:
+        line_symbols = []
+        for match in re.finditer(r"\*", line):
+            line_symbols.append(match.span()[0])
+        
+        symbols.append(line_symbols)
+
+    # check whether each symbol is a gear
+    for line, line_symbols in enumerate(symbols):
+        for position in line_symbols:
+            gear_ratio = get_gear_ratio(line, position, candidate_part_nums)
+            total += gear_ratio
         
     return total
     
