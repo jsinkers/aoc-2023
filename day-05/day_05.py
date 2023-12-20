@@ -16,6 +16,28 @@ class SeedMap:
         # if no map found, return the same value
         return value
     
+    def map_range(self, low, high):
+        # check if the input range is contained in any of the map ranges
+        mapped_ranges = []
+        for dest, source, range_length in self.ranges:
+            # case 2: input range is contained in a single map range - return the mapped values of low/high from the corresponding range
+            if low >= source and high < source + range_length:
+                mapped_ranges.append((low - source + dest, high - source + dest))
+                break
+            # case 3: input range is contained in multiple map ranges - return each mapped range
+            elif low < source and high >= source + range_length:
+                mapped_ranges.append((dest, dest + range_length - 1))
+                low = source + range_length
+            elif low < source and source < high < source + range_length: 
+                mapped_ranges.append((dest, high - source + dest))
+                high = source
+        
+        # case 1: no corresponding map range - return identity
+        if len(mapped_ranges) == 0:
+            mapped_ranges=[(low, high)]
+
+        return mapped_ranges
+    
     def __repr__(self):
         return f"Map from {self.cat1} to {self.cat2} with {len(self.ranges)} ranges"
 
@@ -101,26 +123,28 @@ def part_2(lines):
     # now for each seed, determine the corresponding location numbers
     locations = []
     min_val = None
-    for seed, seed_range in seeds:
-        seed_range_locs = []
-        for seed_val in range(seed, seed + seed_range):
-            value = seed_val
-            vals = []
-            for seed_map in maps:
-                #print(f"Mapping {value} with {seed_map}")
-                value = seed_map.map_value(value)
-                vals.append(value)
-
-            #print(f"Seed {seed} maps to {vals}")
-            min_val = value if min_val is None or value < min_val else min_val
-            seed_range_locs.append(value)
+    for low_seed, range_length in seeds:
+        print(f"Seed: {low_seed}, {range_length}")
+        high_seed = low_seed + range_length - 1
+        ranges = [(low_seed, high_seed)]
+        for seed_map in maps:
+            new_ranges = []
+            # map each range
+            for low, high in ranges:
+                new_ranges += seed_map.map_range(low, high)
+            
+            ranges = new_ranges
+            #print(f"Ranges: {ranges}")
         
-        locations.append(seed_range_locs)
+        min_loc = min([low for low, _ in ranges])
+        locations.append(min_loc)
+        print(ranges)
+        
+        #locations.append(seed_range_locs)
 
     print(f"(Seed, location): {list(zip(seeds, locations))}")
     # find the minimum location value
-    #min_location = min(locations)
-    return min_val
+    return min(locations)
 
     
 
