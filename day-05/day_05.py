@@ -18,23 +18,40 @@ class SeedMap:
     
     def map_range(self, low, high):
         # check if the input range is contained in any of the map ranges
+        unmapped_inputs = [(low, high)]
         mapped_ranges = []
+        # for each range in the map
         for dest, source, range_length in self.ranges:
-            # case 2: input range is contained in a single map range - return the mapped values of low/high from the corresponding range
-            if low >= source and high < source + range_length:
-                mapped_ranges.append((low - source + dest, high - source + dest))
-                break
-            # case 3: input range is contained in multiple map ranges - return each mapped range
-            elif low < source and high >= source + range_length:
-                mapped_ranges.append((dest, dest + range_length - 1))
-                low = source + range_length
-            elif low < source and source < high < source + range_length: 
-                mapped_ranges.append((dest, high - source + dest))
-                high = source
-        
-        # case 1: no corresponding map range - return identity
-        if len(mapped_ranges) == 0:
-            mapped_ranges=[(low, high)]
+            s_low = source
+            s_high = source + range_length - 1
+            new_unmapped_inputs = []
+            # for each range of unmapped inputs
+            for i_l, i_h in unmapped_inputs:
+                # 1: range not applicable to inputs
+                if i_h < s_low or i_l > s_high:
+                    new_unmapped_inputs.append((i_l, i_h))
+                # 2: inputs wholly contained within inputs
+                elif i_l >= s_low and i_h <= s_high:
+                    mapped_ranges.append((i_l - source + dest, i_h - source + dest))
+                # 3: lower bound of input outside of range, upper bound within range
+                elif i_l < s_low and s_low <= i_h <= s_high:
+                    mapped_ranges.append((dest, i_h - source + dest))
+                    new_unmapped_inputs.append((i_l, s_low - 1))
+                # 4: lower bound of input within range, upper bound outside of range
+                elif s_low <= i_l <= s_high and i_h > s_high:
+                    mapped_ranges.append((i_l - source + dest, dest + range_length - 1))
+                    new_unmapped_inputs.append((s_high + 1, i_h))
+                # 5: lower bound below range, upper bound above range
+                elif i_l < s_low and i_h > s_high:
+                    mapped_ranges.append((dest, dest + range_length - 1))
+                    new_unmapped_inputs.append((i_l, s_low - 1))
+                    new_unmapped_inputs.append((s_high + 1, i_h))
+
+            unmapped_inputs = new_unmapped_inputs
+
+        # 6: add any remaining unmapped inputs using identity
+        for i_l, i_h in unmapped_inputs:
+            mapped_ranges.append((i_l, i_h))
 
         return mapped_ranges
     
