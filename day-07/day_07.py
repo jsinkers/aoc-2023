@@ -52,9 +52,13 @@ class Hand:
         self_card_type = self.classification[0]
         other_card_type = other.classification[0]
         if self_card_type.value == other_card_type.value:
-            self_card_value = self.classification[1]
-            other_card_value = other.classification[1]
-            return self_card_value < other_card_value
+            # map hand to order values
+            reverse_order = list(reversed(order))
+            self_hand = [reverse_order.index(card) for card in self.hand]
+            other_hand = [reverse_order.index(card) for card in other.hand]
+
+            # compare hands using order
+            return self_hand < other_hand
         else:
             return self_card_type.value < other_card_type.value
     
@@ -71,9 +75,9 @@ def part_1(lines):
         hands.append(hand)
 
     # sort by hand classification
-    print(hands)
+    #print(hands)
     hands.sort()
-    print(hands)
+    #print(hands)
     #print(f"{hand} {bid} {score}")
     #winnings = score*bid
     winnings = sum([hand.bid*(i+1) for i, hand in enumerate(hands)])
