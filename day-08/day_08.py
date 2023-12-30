@@ -43,7 +43,8 @@ def part_2(lines):
     paths = []
     
     def at_end(position):
-        return all([p[2] == 'Z' for p in position])
+        return position[2] == 'Z'
+
     i = 0
     
     # 3rd line onwards defines map
@@ -55,13 +56,16 @@ def part_2(lines):
             positions.append(source)
             paths.append([source])
 
+    steps_to_end = []
+    cycle_lengths = []
     path_lengths = []
     # follow each path checking for cycles 
     for j, position in enumerate(positions):
         path = [position]
-        cycle_detected = False
+        #cycle_detected = False
+        end_detected = False
         i = 0 
-        while not cycle_detected:
+        while not end_detected:
             # move to the next position - wrap around with directions
             direction = directions[i % len(directions)]
             if direction == 'L':
@@ -69,19 +73,27 @@ def part_2(lines):
             elif direction == 'R':
                 new_posn = map[position][1]
             
-
-            position = new_posn
+            i += 1
             if new_posn in path:
+                # get index of first occurrence
+                idx = path.index(new_posn)
+                cycle_length = i - idx
+                cycle_lengths.append(cycle_length)
                 # cycle detected
-                print(f"Cycle detected for path {j} after {i} steps")
+                print(f"Cycle detected for path {j} after {i} steps, cycle_length = {cycle_length}")
                 path_lengths.append(i)
                 cycle_detected = True
+            
+            if at_end(new_posn):
+                print(f"End detected for path {j} after {i} steps")
+                steps_to_end.append(i)
+                end_detected = True
 
-            i += 1
             path.append(new_posn)
+            position = new_posn
     
     # determine lowest common multiple of path lengths
-    return math.lcm(*path_lengths)
+    return math.lcm(*steps_to_end)
     
 
 if __name__ == '__main__':
