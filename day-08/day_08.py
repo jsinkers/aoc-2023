@@ -1,5 +1,5 @@
 import re
-
+import math
 
 def part_1(lines):
     # parse input
@@ -35,10 +35,12 @@ def part_2(lines):
     # parse input
     # first line gives directions
     directions = lines[0].strip()
+    print(directions)
 
     # use a dict to store the map for easy lookup
     map = {}
     positions = []
+    paths = []
     
     def at_end(position):
         return all([p[2] == 'Z' for p in position])
@@ -51,21 +53,35 @@ def part_2(lines):
         map[source] = (left, right)
         if source[2] == 'A':
             positions.append(source)
+            paths.append([source])
 
-    # follow the directions to get to the destination
-    while not at_end(positions):
-        #print(positions)
-        for j, position in enumerate(positions):
+    path_lengths = []
+    # follow each path checking for cycles 
+    for j, position in enumerate(positions):
+        path = [position]
+        cycle_detected = False
+        i = 0 
+        while not cycle_detected:
             # move to the next position - wrap around with directions
             direction = directions[i % len(directions)]
             if direction == 'L':
-                positions[j] = map[position][0]
+                new_posn = map[position][0]
             elif direction == 'R':
-                positions[j] = map[position][1]
+                new_posn = map[position][1]
             
-        i += 1
 
-    return i
+            position = new_posn
+            if new_posn in path:
+                # cycle detected
+                print(f"Cycle detected for path {j} after {i} steps")
+                path_lengths.append(i)
+                cycle_detected = True
+
+            i += 1
+            path.append(new_posn)
+    
+    # determine lowest common multiple of path lengths
+    return math.lcm(*path_lengths)
     
 
 if __name__ == '__main__':
