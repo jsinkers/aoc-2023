@@ -32,8 +32,40 @@ def part_1(lines):
     return i
     
 def part_2(lines):
-    total = 0
-    return total
+    # parse input
+    # first line gives directions
+    directions = lines[0].strip()
+
+    # use a dict to store the map for easy lookup
+    map = {}
+    positions = []
+    
+    def at_end(position):
+        return all([p[2] == 'Z' for p in position])
+    i = 0
+    
+    # 3rd line onwards defines map
+    for line in lines[2:]:
+        match = re.match(r'(\w+) = \((\w+), (\w+)\)', line)
+        source, left, right = match.groups()
+        map[source] = (left, right)
+        if source[2] == 'A':
+            positions.append(source)
+
+    # follow the directions to get to the destination
+    while not at_end(positions):
+        #print(positions)
+        for j, position in enumerate(positions):
+            # move to the next position - wrap around with directions
+            direction = directions[i % len(directions)]
+            if direction == 'L':
+                positions[j] = map[position][0]
+            elif direction == 'R':
+                positions[j] = map[position][1]
+            
+        i += 1
+
+    return i
     
 
 if __name__ == '__main__':
@@ -56,7 +88,10 @@ if __name__ == '__main__':
     print(f"Real output: {input_vals}")
 
     print("Part 2 ======================")
-    test_vals = part_2(test_lines)
+    with open('test_3.txt', 'r') as f:
+        test_3_lines = f.readlines()
+
+    test_vals = part_2(test_3_lines)
     print(f"Test output: {test_vals}")
     input_vals = part_2(input_lines)
     print(f"Real output: {input_vals}")
