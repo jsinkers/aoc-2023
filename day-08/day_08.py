@@ -57,12 +57,9 @@ def part_2(lines):
             paths.append([source])
 
     steps_to_end = []
-    cycle_lengths = []
-    path_lengths = []
     # follow each path checking for cycles 
     for j, position in enumerate(positions):
         path = [position]
-        #cycle_detected = False
         end_detected = False
         i = 0 
         while not end_detected:
@@ -74,16 +71,8 @@ def part_2(lines):
                 new_posn = map[position][1]
             
             i += 1
-            if new_posn in path:
-                # get index of first occurrence
-                idx = path.index(new_posn)
-                cycle_length = i - idx
-                cycle_lengths.append(cycle_length)
-                # cycle detected
-                print(f"Cycle detected for path {j} after {i} steps, cycle_length = {cycle_length}")
-                path_lengths.append(i)
-                cycle_detected = True
             
+            # find length of path to an end position - we then get cycles of this length
             if at_end(new_posn):
                 print(f"End detected for path {j} after {i} steps")
                 steps_to_end.append(i)
