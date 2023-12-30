@@ -2,6 +2,8 @@ import re
 from enum import Enum
 
 order = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5','4', '3', '2']
+
+order_pt2 = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5','4', '3', '2', 'J']
 # enum of types
 
 class CardType(Enum):
@@ -42,18 +44,59 @@ def classify_hand(hand):
         return CardType.HIGH_CARD, sorted(hand, key=lambda x: order.index(x))
     
 
+import itertools
+
+def classify_hand_pt_2(hand):
+    # return the type of hand
+    hand_set = set(hand)
+    joker = False
+    num_jokers = hand.count('J')
+
+    if 'J' in hand_set:
+        joker = True
+
+    # determine original hand score
+    best_classification = classify_hand(hand)
+    # get all joker indices
+    
+    joker_indexes = [i for i, card in enumerate(hand) if card == 'J']
+
+    # brute force approach: replace each joker with a different card
+    for perm in itertools.product(order_pt2, repeat=num_jokers):
+        # make a copy of the hand
+        perm_hand = list(hand)
+        # update the hand based on the permutation
+        for i, joker_index in enumerate(joker_indexes):
+            perm_hand[joker_index] = perm[i]
+
+        # evaluate the hand
+        classification = classify_hand(perm_hand)
+        if classification[0].value > best_classification[0].value:
+            best_classification = classification
+        elif classification[0].value == best_classification[0].value:
+            if classification[1] > best_classification[1]:
+                best_classification = classification
+
+    return best_classification
+
+
 class Hand:
-    def __init__(self, hand, bid):
+    def __init__(self, hand, bid, type='pt1'):
         self.hand = hand
         self.bid = bid
-        self.classification = classify_hand(hand)
+        if type == 'pt1':
+            self.classification = classify_hand(hand)
+            self.order = order
+        else: 
+            self.classification = classify_hand_pt_2(hand)
+            self.order = order_pt2
     
     def __lt__(self, other):
         self_card_type = self.classification[0]
         other_card_type = other.classification[0]
         if self_card_type.value == other_card_type.value:
             # map hand to order values
-            reverse_order = list(reversed(order))
+            reverse_order = list(reversed(self.order))
             self_hand = [reverse_order.index(card) for card in self.hand]
             other_hand = [reverse_order.index(card) for card in other.hand]
 
@@ -84,8 +127,22 @@ def part_1(lines):
     return winnings
     
 def part_2(lines):
-    total = 0
-    return total
+    # read hand and bid
+    hands = []
+    for line in lines:
+        hand, bid = line.split(' ')
+        bid = int(bid)
+        hand = Hand(hand, bid, type='pt2')
+        hands.append(hand)
+
+    # sort by hand classification
+    #print(hands)
+    hands.sort()
+    #print(hands)
+    #print(f"{hand} {bid} {score}")
+    #winnings = score*bid
+    winnings = sum([hand.bid*(i+1) for i, hand in enumerate(hands)])
+    return winnings
     
 
 if __name__ == '__main__':
