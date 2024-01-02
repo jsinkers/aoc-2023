@@ -1,10 +1,26 @@
 import re
 
-        
+def next_history_val(inp):
+    diffs = [inp[i+1] - inp[i] for i in range(len(inp)-1)]
+    # if all diffs are 0
+    if all([d == 0 for d in diffs]):
+        return inp[-1]
+
+    return inp[-1] + next_history_val(diffs)
+
+
+
 
 def part_1(lines):
-    total = 0
-    return total
+    vals = []
+    for line in lines:
+        nums = line.split(' ')
+        nums = [int(num) for num in nums]
+        val = next_history_val(nums)
+        vals.append(val)
+        
+    print(vals)
+    return sum(vals)
     
 def part_2(lines):
     total = 0
