@@ -11,7 +11,17 @@ def next_history_val(inp):
     # recursive case: compute next value
     return inp[-1] + next_history_val(diffs)
 
+def start_history_val(inp):
+    print(inp)
+    # compute the differences between values
+    diffs = [inp[i+1] - inp[i] for i in range(len(inp)-1)]
+    # recursively generate next value
+    # base case: if all diffs are 0
+    if all([d == 0 for d in diffs]):
+        return inp[0]
 
+    # recursive case: compute next value
+    return inp[0] - start_history_val(diffs)
 
 
 def part_1(lines):
@@ -22,12 +32,19 @@ def part_1(lines):
         val = next_history_val(nums)
         vals.append(val)
         
-    print(vals)
+    #print(vals)
     return sum(vals)
     
 def part_2(lines):
-    total = 0
-    return total
+    vals = []
+    for line in lines:
+        nums = line.split(' ')
+        nums = [int(num) for num in nums]
+        val = start_history_val(nums)
+        vals.append(val)
+        
+    #print(vals)
+    return sum(vals)
     
 
 if __name__ == '__main__':
