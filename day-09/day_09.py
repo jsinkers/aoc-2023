@@ -1,11 +1,14 @@
 import re
 
 def next_history_val(inp):
+    # compute the differences between values
     diffs = [inp[i+1] - inp[i] for i in range(len(inp)-1)]
-    # if all diffs are 0
+    # recursively generate next value
+    # base case: if all diffs are 0
     if all([d == 0 for d in diffs]):
         return inp[-1]
 
+    # recursive case: compute next value
     return inp[-1] + next_history_val(diffs)
 
 
