@@ -1,4 +1,5 @@
 import re
+from functools import cache 
 
         
 def is_valid_record(record, contig):
@@ -63,8 +64,55 @@ def part_1(lines):
     return sum(num_records_possible)
     
 def part_2(lines):
-    total = 0
-    return total
+    records = []
+    # parse input
+    for line in lines:
+        record, contig_groups = line.split()
+        contig_groups = contig_groups.split(',')
+        contig_groups = [int(c) for c in contig_groups]
+        records.append((record, contig_groups))
+
+    # process records
+    num_records_possible = []
+    for record, contig_groups in records:
+        @cache
+        def check_record(pos, group):
+            #print(f"check_record({pos}, {group})")
+            num_ways=0
+
+            if pos == len(record):
+                return 1 if group == len(contig_groups) else 0
+            
+            if record[pos] in '.?':
+                # treat as non-defective either way (i.e. as a '.')
+                num_ways += check_record(pos+1, group)
+            
+            if group >= len(contig_groups):
+                return num_ways
+
+            end_index = pos + contig_groups[group]
+
+            # now see if we can form a contiguous group of #
+            if end_index >= len(record):
+                return num_ways
+            
+            if '.' not in record[pos:end_index] and record[end_index] != '#':
+                num_ways += check_record(end_index + 1, group+1)
+
+            #print(num_ways)
+            return num_ways
+
+        # append ? to end of record 
+        record += '?'
+        record = record * 5
+        contig_groups = contig_groups * 5
+        print(f"Processing record: {record} {contig_groups}")
+        num_ways = check_record(0, 0)
+        print(f"Num ways: {num_ways}")
+        num_records_possible.append(num_ways)
+
+
+    return sum(num_records_possible)
     
 
 if __name__ == '__main__':
@@ -82,7 +130,7 @@ if __name__ == '__main__':
     print(f"Real output: {input_vals}")
 
     # print("Part 2 ======================")
-    # test_vals = part_2(test_lines)
-    # print(f"Test output: {test_vals}")
-    # input_vals = part_2(input_lines)
-    # print(f"Real output: {input_vals}")
+    test_vals = part_2(test_lines)
+    print(f"Test output: {test_vals}")
+    input_vals = part_2(input_lines)
+    print(f"Real output: {input_vals}")
