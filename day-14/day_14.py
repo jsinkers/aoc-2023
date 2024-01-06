@@ -65,29 +65,33 @@ def part_2(lines):
     states = {}
     state_list = []
     for cycle in range(1000000000):
-        state_list.append(deepcopy(rock_positions))
+        state_list.append(rock_positions)
 
         if cycle % 10000 == 0:
             print(f"Cycle {cycle}")
         rock_positions = perform_cycle(rock_positions)
 
-        # TODO: check for cycle - compute hash of grid and store in list with current cycle
-
+        # check for cycle - compute hash of grid and store in list with current cycle
         state = [str(row) for row in rock_positions]
         state = ''.join(state)
         state_hash = hash(state)
         if state_hash in states:
             print(f"Cycle {cycle} is a repeat of cycle {states[state_hash]}")
+            start_cycle = states[state_hash]
+            len_cycle = cycle - start_cycle - 1
             break
         else:
             states[state_hash] = cycle
     
     # get state_list index for 1000000000
-    ind = 1000000000 % len(state_list)
+    print(f"len_cycle: {len_cycle}, start_cycle: {start_cycle}")
+    ind = (1000000000 - start_cycle) % len_cycle
+    ind += start_cycle - 1
+    print("ind: ", ind)
     rock_positions = state_list[ind]
 
     # calculate load for each rock
-    rock_positions = list(zip(*rock_positions))
+    rock_positions = reversed(list(rock_positions))
     score = [(i+1, row.count('O')) for i, row in enumerate(rock_positions)]
     score = sum([i*count for i, count in score])
     return score
@@ -113,7 +117,7 @@ def perform_cycle(rock_positions):
     rock_positions = perform_tilt(rock_positions)
     
     # reverse each list again - back to normal orientation
-    rock_positions = [reversed(row) for row in rock_positions]
+    rock_positions = [list(reversed(row)) for row in rock_positions]
     return rock_positions
 
 
@@ -156,5 +160,5 @@ if __name__ == '__main__':
     # print("Part 2 ======================")
     test_vals = part_2(test_lines)
     print(f"Test output: {test_vals}")
-    #input_vals = part_2(input_lines)
-    #print(f"Real output: {input_vals}")
+    input_vals = part_2(input_lines)
+    print(f"Real output: {input_vals}")
