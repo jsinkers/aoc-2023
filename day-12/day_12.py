@@ -31,27 +31,25 @@ def part_1(lines):
             num_ways=0
 
             if pos == len(record):
-                return group == len(contig_groups)
-                #return 1 if group == len(contig_groups) else 0
+                return 1 if group == len(contig_groups) else 0
             
-            #if group >= len(contig_groups):
-            #    return 0
-
             if record[pos] in '.?':
                 # treat as non-defective either way (i.e. as a '.')
                 num_ways += check_record(pos+1, group)
             
+            if group >= len(contig_groups):
+                return num_ways
+
+            end_index = pos + contig_groups[group]
+
             # now see if we can form a contiguous group of #
-            #if end_index >= len(record):
-            #    return num_ways
+            if end_index >= len(record):
+                return num_ways
+            
+            if '.' not in record[pos:end_index] and record[end_index] != '#':
+                num_ways += check_record(end_index + 1, group+1)
 
-            try:
-                end_index = pos + contig_groups[group]
-                if '.' not in record[pos:end_index] and record[end_index] != '#':
-                    num_ways += check_record(end_index + 1, group+1)
-            except IndexError:
-                pass
-
+            #print(num_ways)
             return num_ways
 
         # append ? to end of record 
