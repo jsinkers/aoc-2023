@@ -62,12 +62,29 @@ def part_2(lines):
     # rock_positions = perform_cycle(rock_positions)
     # print_grid(rock_positions)
 
+    states = {}
+    state_list = []
     for cycle in range(1000000000):
-        if cycle % 100000 == 0:
+        state_list.append(deepcopy(rock_positions))
+
+        if cycle % 10000 == 0:
             print(f"Cycle {cycle}")
         rock_positions = perform_cycle(rock_positions)
 
-    # TODO: check for cycle - compute hash of grid and store in list
+        # TODO: check for cycle - compute hash of grid and store in list with current cycle
+
+        state = [str(row) for row in rock_positions]
+        state = ''.join(state)
+        state_hash = hash(state)
+        if state_hash in states:
+            print(f"Cycle {cycle} is a repeat of cycle {states[state_hash]}")
+            break
+        else:
+            states[state_hash] = cycle
+    
+    # get state_list index for 1000000000
+    ind = 1000000000 % len(state_list)
+    rock_positions = state_list[ind]
 
     # calculate load for each rock
     rock_positions = list(zip(*rock_positions))
