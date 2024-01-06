@@ -69,10 +69,7 @@ def get_reflection(pattern):
 
 def get_reflection_2(pattern):
     num_rows = len(pattern)
-    #print_grid(pattern)
-    # check rows for reflections
-    reflections = []
-    diffs = []
+
     for i in range(0, num_rows-1):
         diff = 0
         #print(f"\nLine of symmetry at row {i}")
@@ -82,22 +79,15 @@ def get_reflection_2(pattern):
             row2_ind = i + j + 1
             #print(f"Checking rows {row1_ind} and {row2_ind}")
             if row1_ind < 0 or row2_ind >= num_rows:
-                #print(f"Reflection detected at rows {i}")
-                if match:
-                    reflections.append(i)
-
+                if diff == 1:
+                    return i
+                
                 break
             
             # compute differences between rows
             diff += sum([r1 != r2 for r1, r2 in zip(pattern[row1_ind], pattern[row2_ind])])
-            if pattern[row1_ind] != pattern[row2_ind]:
-                #print(f"No match at rows {row1_ind} and {row2_ind}")
-                match = False
-                #break
         
-        diffs.append(diff)
-
-    return reflections, diffs
+    return None
 
 def part_2(lines):
     # parse input
@@ -115,22 +105,17 @@ def part_2(lines):
     
     if len(pattern) > 0:
         patterns.append(pattern)
-    print(patterns)
     # find reflections
     row_reflections = []
     col_reflections = []
     for pattern in patterns:
         transposed_pattern = list(zip(*pattern))
         # now look for alternate axis of symmetry
-        _, row_diffs = get_reflection_2(pattern)
-        _, col_diffs = get_reflection_2(transposed_pattern)
-        print(f"Row diffs: {row_diffs}")
-        print(f"Col diffs: {col_diffs}")
-        if 1 in row_diffs:
-            new_row_reflection = row_diffs.index(1)
+        new_row_reflection = get_reflection_2(pattern)
+        new_col_reflection = get_reflection_2(transposed_pattern)
+        if new_row_reflection is not None:
             row_reflections.append(new_row_reflection)
-        elif 1 in col_diffs:
-            new_col_reflection = col_diffs.index(1)
+        elif new_col_reflection is not None:
             col_reflections.append(new_col_reflection)
 
     sum_vert_lines = sum([c + 1 for c in col_reflections])
