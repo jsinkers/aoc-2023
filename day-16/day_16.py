@@ -152,9 +152,15 @@ def part_2(lines):
     energised_dict = {}
 
     def out_of_bounds(x, y):
-        return x < 0 or x >= num_cols or y < 0 or y >= num_rows
+        #print(f"out_of_bounds: {x}, {y}")
+        out_of_bounds = x < 0 or x >= num_cols or y < 0 or y >= num_rows
+        #if out_of_bounds:
+        #    print(f"num_cols: {num_cols}, num_rows: {num_rows}")
+        #    print(f"out_of_bounds: {x}, {y}")
+        return out_of_bounds
 
     def move(x, y, direction):
+        #print(f"move: {x}, {y}, {direction}")
         def in_cycle(x, y, direction):
             return (x, y, direction) in history
         
@@ -217,10 +223,12 @@ def part_2(lines):
                 y += 1
         
         updated_beams.append((x, y, direction))
-        for beam in updated_beams:
+        #print(f"updated_beams: {updated_beams}")
+        beams = copy(updated_beams)
+        for beam in beams:
             x, y, direction = beam
             if out_of_bounds(x, y):
-                print(f"out of bounds: {x}, {y}, {direction}")
+                #print(f"out of bounds: {x}, {y}, {direction}")
                 updated_beams.remove(beam)
             elif in_cycle(x, y, direction):
                 updated_beams.remove(beam)
@@ -230,13 +238,14 @@ def part_2(lines):
         return updated_beams
 
     def get_energised(x, y, direction):
-        print(f"get_energised: {x}, {y}, {direction}")
+        #print(f"get_energised: {x}, {y}, {direction}")
         if (x, y, direction) in energised_dict.keys():
+            print(f"energised_dict {x}, {y}, {direction}: {energised_dict[(x, y, direction)]}")
             return energised_dict[(x, y, direction)]
         
         new_beams = move(x, y, direction)
-        print(f"new_beams: {new_beams}")
-        energised = set([(x, y)])
+        #print(f"new_beams: {new_beams}")
+        energised = set([(x, y, direction)])
         for beam in new_beams:
             x, y, direction = beam
             # add elements of set to set
@@ -246,8 +255,36 @@ def part_2(lines):
         #print(energised_dict)
         return energised
 
-    energised = get_energised(0, 0, Direction.RIGHT)
-    return len(energised)
+    # scan boundary cells 
+    # generate list of boundary cells
+    boundary_cells = [(x, 0, Direction.DOWN) for x in range(num_cols)]
+    boundary_cells += [(x, num_rows-1, Direction.UP) for x in range(num_cols)]
+    boundary_cells += [(0, y, Direction.RIGHT) for y in range(num_rows)]
+    boundary_cells += [(num_cols-1, y, Direction.LEFT) for y in range(num_rows)]
+    #boundary_cells = [(0, 0, Direction.RIGHT), (3, 0, Direction.DOWN)]
+    print(f"boundary_cells: {boundary_cells}, num_cells = {len(boundary_cells)}")
+
+    # loop over boundary cells and get energised set
+    #energised = [get_energised(x, y, direction) for x, y, direction in boundary_cells]
+    energised = []
+    for i, (x, y, direction) in enumerate(boundary_cells):
+        print(i)
+        #print(f"boundary cell: {x}, {y}, {direction}")
+        history = []
+        energised_dict = {}
+        e = get_energised(x, y, direction)
+        e_set = set((x, y) for x, y, _ in e)
+
+        #print(f"energised: {e}")
+        #print(f"num_energised: {len(e_set)}")
+        energised.append(e_set)
+    # get number of energised cells for each boundary cell
+    num_energised = [len(e) for e in energised]
+    print(f"num_energised: {num_energised}")
+    # determine the maximum
+    max_energised = max(num_energised)
+
+    return max_energised
         
 
 if __name__ == '__main__':
@@ -260,8 +297,8 @@ if __name__ == '__main__':
     #print("Part 1 ======================")
     #test_vals = part_1(test_lines)
     #print(f"Test output: {test_vals}")
-    #input_vals = part_1(input_lines)
-    #print(f"Real output: {input_vals}")
+    input_vals = part_1(input_lines)
+    print(f"Real output: {input_vals}")
 
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
