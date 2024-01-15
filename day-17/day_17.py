@@ -3,10 +3,10 @@ import re
 import heapq
         
 class Direction:
-    RIGHT = 'right'
-    LEFT = 'left'
-    UP = 'up'
-    DOWN = 'down'
+    RIGHT = 0
+    LEFT = 1
+    UP = 2
+    DOWN = 3
 
 def part_1(lines):
     # parse input
@@ -23,40 +23,47 @@ def part_1(lines):
 
     # conduct a breadth first search from the start location to the end location to determine the path with minimal
     # heat loss, without taking more than 3 steps in a straight line
-    queue = [(0, [(0, 0)], Direction.RIGHT, 0), (0, [(0, 0)], Direction.DOWN, 0)]
+    queue = [(0, 0, 0, 0, Direction.RIGHT, 0), (0, 0, 0, 0, Direction.DOWN, 0)]
     heapq.heapify(queue)
 
     def out_of_bounds(x, y):
         return x < 0 or x >= num_cols or y < 0 or y >= num_rows
     
-    explored = set()
+    explored = {}
 
     i = 0
     while len(queue) > 0:
         current_location = heapq.heappop(queue)
-        heat_loss, path, direction, num_steps = current_location
+        h, heat_loss, x, y, direction, num_steps = current_location
 
-        if i % 10000:
-            print(heat_loss)
+        if i % 100000 == 0:
+            print(f"h: {h}, heat loss: {heat_loss}, x: {x}, y: {y}, direction: {direction}, num_steps: {num_steps}, len(queue): {len(queue)}")
         i += 1
 
-        #print(path)
-        x, y = path[-1]
         # check if we've reached the end
         if x == end_location[0] and y == end_location[1]:
-            print(f"Found path: {path}, heat loss: {heat_loss}")
-            finished_path = path
+            #print(f"Found path: {path}, heat loss: {heat_loss}")
+            #finished_path = path
             min_heat_loss = heat_loss
             break 
 
         # move in different directions
-        explored.add((x, y))
+        state = (x, y, direction, num_steps)
         new_positions = [(x + 1, y, Direction.RIGHT), (x - 1, y, Direction.LEFT), 
                          (x, y + 1, Direction.DOWN), (x, y - 1, Direction.UP)]
+        # don't reverse
+        if direction == Direction.RIGHT:
+            new_positions.remove((x - 1, y, Direction.LEFT))
+        elif direction == Direction.LEFT:
+            new_positions.remove((x + 1, y, Direction.RIGHT))
+        elif direction == Direction.UP:
+            new_positions.remove((x, y + 1, Direction.DOWN))
+        elif direction == Direction.DOWN:
+            new_positions.remove((x, y - 1, Direction.UP))
+
+        # add new positions to queue
         for new_x, new_y, new_dir in new_positions:
             if out_of_bounds(new_x, new_y):
-                continue
-            if (new_x, new_y) in explored:
                 continue
 
             if new_dir == direction:
@@ -66,23 +73,20 @@ def part_1(lines):
             else:
                 new_num_steps = 1
 
+            if (new_x, new_y, new_dir, new_num_steps) in explored:
+                #print(f"Already explored: {new_x}, {new_y}, {new_dir}")
+                continue
+
             # insert new state into queue based on current heat loss
             new_heat_loss = heat_loss + heat_loss_map[new_y][new_x]
-            heapq.heappush(queue, (new_heat_loss, path + [(new_x, new_y)], new_dir, new_num_steps))
-
-    path_map = deepcopy(heat_loss_map)
-    min_heat_loss = 0
-    for path in finished_path:
-        x, y = path
-        if x == 0 and y == 0:
-            continue
-        min_heat_loss += heat_loss_map[y][x]
-        path_map[y][x] = '.'
-        
-    
-    for row in path_map:
-        row = [str(x) for x in row]
-        print(''.join(row))
+            # heuristic: manhattan distance to end + heat loss
+            # NB as all tiles have a heat loss >= 1, this is an admissible heuristic, so we are guaranteed
+            # an optimal solution
+            h = new_heat_loss + (abs(new_x - end_location[0]) + abs(new_y - end_location[1]))
+            # push onto priority queue according to min heuristic
+            heapq.heappush(queue, (h, new_heat_loss, new_x, new_y, new_dir, new_num_steps))
+            state = (new_x, new_y, new_dir, new_num_steps)
+            explored[state] = new_heat_loss
 
     return min_heat_loss
     
