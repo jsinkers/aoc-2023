@@ -8,7 +8,7 @@ class Direction:
     UP = 2
     DOWN = 3
 
-def part_1(lines):
+def part_1(lines, part_2=False):
     # parse input
     heat_loss_map = [[int(x) for x in line.strip()] for line in lines]
     num_rows = len(heat_loss_map)
@@ -21,9 +21,12 @@ def part_1(lines):
     # heat_loss is the sum of the heat loss of all the tiles in the path
     max_straight_line_steps = 3
 
+    min_straight_line_steps_pt_2 = 4
+    max_straight_line_steps_pt_2 = 10
+
     # conduct a breadth first search from the start location to the end location to determine the path with minimal
     # heat loss, without taking more than 3 steps in a straight line
-    queue = [(0, 0, 0, 0, Direction.RIGHT, 0), (0, 0, 0, 0, Direction.DOWN, 0)]
+    queue = [(0, 0, 0, 0, Direction.RIGHT, 0, []), (0, 0, 0, 0, Direction.DOWN, 0, [])]
     heapq.heapify(queue)
 
     def out_of_bounds(x, y):
@@ -34,18 +37,18 @@ def part_1(lines):
     i = 0
     while len(queue) > 0:
         current_location = heapq.heappop(queue)
-        h, heat_loss, x, y, direction, num_steps = current_location
+        h, heat_loss, x, y, direction, num_steps, path = current_location
 
         if i % 100000 == 0:
             print(f"h: {h}, heat loss: {heat_loss}, x: {x}, y: {y}, direction: {direction}, num_steps: {num_steps}, len(queue): {len(queue)}")
         i += 1
 
         # check if we've reached the end
-        if x == end_location[0] and y == end_location[1]:
-            #print(f"Found path: {path}, heat loss: {heat_loss}")
-            #finished_path = path
-            min_heat_loss = heat_loss
-            break 
+        if x == end_location[0] and y == end_location[1]: 
+            if (part_2 and num_steps >= min_straight_line_steps_pt_2) or not part_2:
+                print(f"Found path: {path}, heat loss: {heat_loss}")
+                min_heat_loss = heat_loss
+                break 
 
         # move in different directions
         state = (x, y, direction, num_steps)
@@ -66,12 +69,24 @@ def part_1(lines):
             if out_of_bounds(new_x, new_y):
                 continue
 
-            if new_dir == direction:
-                new_num_steps = num_steps + 1
-                if new_num_steps > max_straight_line_steps:
-                    continue
+            if not part_2:
+                if new_dir == direction:
+                    new_num_steps = num_steps + 1
+                    if new_num_steps > max_straight_line_steps:
+                        continue
+                else:
+                    new_num_steps = 1
             else:
-                new_num_steps = 1
+                if new_dir == direction:
+                    new_num_steps = num_steps + 1
+                    if new_num_steps > max_straight_line_steps_pt_2:
+                        continue
+                else:
+                    if num_steps >= min_straight_line_steps_pt_2:
+                        # must continue same direction for min steps
+                        new_num_steps = 1
+                    else:
+                        continue
 
             if (new_x, new_y, new_dir, new_num_steps) in explored:
                 #print(f"Already explored: {new_x}, {new_y}, {new_dir}")
@@ -84,32 +99,40 @@ def part_1(lines):
             # an optimal solution
             h = new_heat_loss + (abs(new_x - end_location[0]) + abs(new_y - end_location[1]))
             # push onto priority queue according to min heuristic
-            heapq.heappush(queue, (h, new_heat_loss, new_x, new_y, new_dir, new_num_steps))
+            new_path = None
+            #new_path = deepcopy(path)
+            #new_path.append((new_x, new_y, new_num_steps))
+            heapq.heappush(queue, (h, new_heat_loss, new_x, new_y, new_dir, new_num_steps, new_path))
             state = (new_x, new_y, new_dir, new_num_steps)
             explored[state] = new_heat_loss
 
+    print(path)
     return min_heat_loss
     
 def part_2(lines):
-    total = 0
-    return total
+    return part_1(lines, part_2=True)
     
 
 if __name__ == '__main__':
     with open('test.txt', 'r') as f:
         test_lines = f.readlines()
 
+    with open('test2.txt', 'r') as f:
+        test_2_lines = f.readlines()
+
     with open('input.txt', 'r') as f:
         input_lines = f.readlines()
     
-    print("Part 1 ======================")
-    test_vals = part_1(test_lines)
-    print(f"Test output: {test_vals}")
-    input_vals = part_1(input_lines)
-    print(f"Real output: {input_vals}")
+    #print("Part 1 ======================")
+    #test_vals = part_1(test_lines)
+    #print(f"Test output: {test_vals}")
+    #input_vals = part_1(input_lines)
+    #print(f"Real output: {input_vals}")
 
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
     print(f"Test output: {test_vals}")
+    test_vals = part_2(test_2_lines)
+    print(f"Test 2 output: {test_vals}")
     input_vals = part_2(input_lines)
     print(f"Real output: {input_vals}")
