@@ -9,7 +9,9 @@ def print_grid(grid):
         
 
 def part_1(lines):
-    edges = set([(0, 0)])
+    edges = set()
+    vertices = []
+
     x, y = 0, 0
     min_x, min_y = 0, 0
     max_x, max_y = 0, 0
@@ -18,22 +20,22 @@ def part_1(lines):
         distance = int(distance)
         if direction == 'R':
             for i in range(distance):
-                edges.add((x+i+1, y))
+                edges.add((x+i+1, y, '-'))
 
             x += distance
         elif direction == 'L':
             for i in range(distance):
-                edges.add((x-i-1, y))
+                edges.add((x-i-1, y, '-'))
 
             x -= distance
         if direction == 'U':
             for i in range(distance):
-                edges.add((x, y-i-1))
+                edges.add((x, y-i-1, '|'))
 
             y -= distance
         elif direction == 'D':
             for i in range(distance):
-                edges.add((x, y+i+1))
+                edges.add((x, y+i+1, '|'))
 
             y += distance
         
@@ -41,27 +43,51 @@ def part_1(lines):
         min_y = y if y < min_y else min_y
         max_x = x if x > max_x else max_x
         max_y = y if y > max_y else max_y
+        vertices.append((x, y))
     
     print(f"Min x: {min_x}, max x: {max_x}")
     print(f"Min y: {min_y}, may y: {max_y}")
     grid = [['.' for _ in range(min_x, max_x+1)] for _ in range(min_y-1, max_y+1)]
     for edge in edges:
-        x, y = edge
+        x, y, c = edge
         #print(edge)
-        grid[y-min_y][x-min_x] = '#'
+        grid[y-min_y][x-min_x] = c
     
     
     print_grid(grid)
-    num_cells = len(edges)
-    for row in grid:
-        row = ''.join(row)
-        match = re.findall(r'#(\.+)#', row)
-        if match:
-            cells = sum([len(m) for m in match])
-            #print(f"Row: {row}, cells: {cells}")
-            num_cells += cells
-
-    return num_cells
+    #num_cells = len(edges)
+    num_cells = 0
+    for j, row in enumerate(grid):
+        boundary = False
+        inside = False
+        for i, col in enumerate(row):
+            if not inside and not boundary:
+                if col == '|':
+                    boundary = True
+                    num_cells += 1
+                elif col == '.':
+                    grid[j][i] = 'o'
+            elif boundary and not inside:
+                if col == '.':
+                    inside = True
+                    boundary = False
+                    num_cells += 1
+                    grid[j][i] = 'i'
+            elif not boundary and inside:
+                if col == '.':
+                    num_cells += 1 
+                    grid[j][i] = 'I'
+                elif col == '|':
+                    boundary = True
+                    num_cells += 1
+                    inside = False
+            elif boundary and inside:
+                if col == '.':
+                    grid[j][i] = 'O'
+                    boundary = False
+        
+    print_grid(grid)
+    return num_cells - 1 
     
 def part_2(lines):
     total = 0
@@ -78,8 +104,8 @@ if __name__ == '__main__':
     print("Part 1 ======================")
     test_vals = part_1(test_lines)
     print(f"Test output: {test_vals}")
-    input_vals = part_1(input_lines)
-    print(f"Real output: {input_vals}")
+    #input_vals = part_1(input_lines)
+    #print(f"Real output: {input_vals}")
 
     #print("Part 2 ======================")
     #test_vals = part_2(test_lines)
