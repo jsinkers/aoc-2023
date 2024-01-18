@@ -95,7 +95,7 @@ def part_1(lines):
         module_type, src, dest = match
         dest = dest.split(',')
         dest = [d.strip() for d in dest]
-        print(f"Adding {module_type} -{src}-> {dest}")
+        #print(f"Adding {module_type} -{src}-> {dest}")
         if module_type == '%':
             # flip flop
             flipFlopModule = FlipFlopModule(src)
@@ -123,12 +123,8 @@ def part_1(lines):
         
     # populate conjunction modules
     for conj_module in conj_modules:
-        #parents = [m for m in network.values() if m is not None]
-        #parents = [m for m in parents if conj_module.name in m.dest_modules]
         mod_parents = [network[p] for p in parents[conj_module.name]]
-        print(f"Conjunction {conj_module.name} parents: {[p.name for p in mod_parents]}")
-        #if len(mod_parents) > 2:
-        #    raise Exception("Too many parents")
+        #print(f"Conjunction {conj_module.name} parents: {[p.name for p in mod_parents]}")
         conj_module.add_parent_modules(mod_parents)
     
     # queue of pulses to process
