@@ -49,32 +49,23 @@ class FlipFlopModule(Module):
 
 class ConjunctionModule(Module):
     def __init__(self, name):
-        self.last_pulse_1 = Pulse.LOW
-        self.last_pulse_2 = Pulse.LOW
+        self.last_pulses = None
         self.output = None
         super().__init__(name)
     
     def add_parent_modules(self, parent_modules):
-        if len(parent_modules) == 1:
-            self.parent_module_1 = parent_modules[0]
-            self.parent_module_2 = parent_modules[0]
-        else:
-            self.parent_module_1 = parent_modules[0]
-            self.parent_module_2 = parent_modules[1]
+        self.parent_modules = parent_modules
 
     def input(self, pulse1):
-        pulse1 = self.parent_module_1.output
-        pulse2 = self.parent_module_2.output
+        pulses = [pm.output for pm in self.parent_modules]
 
         # update memory
-        self.last_pulse_1 = pulse1
-        self.last_pulse_2 = pulse2
+        self.last_pulses = pulses
 
         # determine output 
         self.output = Pulse.HIGH
-        if self.last_pulse_1 == Pulse.HIGH and self.last_pulse_2 == Pulse.HIGH:
+        if all([p == Pulse.HIGH for p in pulses]):
             self.output = Pulse.LOW
-
 
         #print(f"\tConjunctionModule {self.name} pulse1: {pulse1}, pulse2: {pulse2}, output: {self.output}")
         return super().get_output(self.output)
@@ -91,6 +82,7 @@ def part_1(lines):
     network = {}
     broadcastModule = BroadcastModule('broadcaster')
     network[broadcastModule.name] = broadcastModule
+    parents = {}
 
     pattern = r'([%&])?(.*) -> (.*)'
     conj_modules = []
@@ -120,15 +112,24 @@ def part_1(lines):
             network[src].add_dest_modules(dest)
 
         for d in dest:
+            if d not in parents:
+                parents[d] = [src]
+            else:
+                parents[d].append(src)
+
+        for d in dest:
             if d not in network:
                 network[d] = None
         
     # populate conjunction modules
     for conj_module in conj_modules:
-        parents = [m for m in network.values() if m is not None]
-        parents = [m for m in parents if conj_module.name in m.dest_modules]
-        print(f"Conjunction {conj_module.name} parents: {[p.name for p in parents]}")
-        conj_module.add_parent_modules(parents)
+        #parents = [m for m in network.values() if m is not None]
+        #parents = [m for m in parents if conj_module.name in m.dest_modules]
+        mod_parents = [network[p] for p in parents[conj_module.name]]
+        print(f"Conjunction {conj_module.name} parents: {[p.name for p in mod_parents]}")
+        #if len(mod_parents) > 2:
+        #    raise Exception("Too many parents")
+        conj_module.add_parent_modules(mod_parents)
     
     # queue of pulses to process
     print("========================")
