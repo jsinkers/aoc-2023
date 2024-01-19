@@ -201,44 +201,7 @@ def part_2(lines):
         conj_module.add_parent_modules(mod_parents)
     
     print(f"Network built - contains {len(network)} modules")
-    # print network
-    # root is 'broadcaster'
-    # Print network
-    print("Network:")
-    queue = ['broadcaster']
-    visited = set()
-    while queue:
-        node = queue.pop(0)
-        if node in visited:
-            continue
-        visited.add(node)
-        module = network[node]
-        print(f"{node}: {module}")
-        queue.extend(module.dest_modules)
 
-    # idea: reduce size of network
-    print("Reducing ...")
-    # now lets traverse network backwards and only include modules that are able to influence the target
-    target = 'rx'
-    relevant_modules = set('rx')
-    queue = ['rx']
-    while len(queue) > 0:
-        node = queue.pop(0)
-        if node in relevant_modules:
-            continue
-
-        relevant_modules.add(node)
-        print(f"Processing {node}, queue len: {len(queue)} ")
-
-        p = parents[node]
-        queue += p
-        for pi in p:
-            if pi not in relevant_modules and pi not in queue:
-                queue.append(pi)
-    
-    print(relevant_modules)
-    print(f"Reduced network contains {len(relevant_modules)} modules")
-    quit()
     # queue of pulses to process
     print("========================")
     num_low, num_high = 0, 0
@@ -246,8 +209,11 @@ def part_2(lines):
     target_found = False
     while not target_found:
         i += 1
-        if i % 10000 == 0:
-            print(f"Step {i} ==============")
+        if i % 100 == 0:
+            quit()
+
+        #print(f"Step {i} ==============")
+
 
         pulses = [('button', 'broadcaster', Pulse.LOW)]
 
@@ -271,6 +237,14 @@ def part_2(lines):
                 
             pulses.extend(new_pulses)
             #print(pulses)
+        
+        # print output values
+        counter_nodes = ['fv', 'jd', 'vm', 'lm']
+        counter1_nodes = ['jl', 'js', 'hq', 'gl', 'mc', 'xt', 'ss', 'mz', 'sp', 'gh', 'rg','zq', 'qj']
+        counter1_nodes.reverse()
+        c1_outputs = [1 if network[n].output == Pulse.LOW else 0 for n in counter1_nodes]
+        c1_outputs = ''.join([str(c) for c in c1_outputs])
+        print(f"Step {i:05}: {c1_outputs}")
 
     print(f"num_low: {num_low}, num_high: {num_high}")
     return num_low*num_high
