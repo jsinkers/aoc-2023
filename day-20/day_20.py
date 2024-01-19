@@ -154,6 +154,7 @@ def part_2(lines):
     broadcastModule = BroadcastModule('broadcaster')
     network[broadcastModule.name] = broadcastModule
     parents = {}
+    parents[broadcastModule.name] = []
 
     pattern = r'([%&])?(.*) -> (.*)'
     conj_modules = []
@@ -199,6 +200,45 @@ def part_2(lines):
         #print(f"Conjunction {conj_module.name} parents: {[p.name for p in mod_parents]}")
         conj_module.add_parent_modules(mod_parents)
     
+    print(f"Network built - contains {len(network)} modules")
+    # print network
+    # root is 'broadcaster'
+    # Print network
+    print("Network:")
+    queue = ['broadcaster']
+    visited = set()
+    while queue:
+        node = queue.pop(0)
+        if node in visited:
+            continue
+        visited.add(node)
+        module = network[node]
+        print(f"{node}: {module}")
+        queue.extend(module.dest_modules)
+
+    # idea: reduce size of network
+    print("Reducing ...")
+    # now lets traverse network backwards and only include modules that are able to influence the target
+    target = 'rx'
+    relevant_modules = set('rx')
+    queue = ['rx']
+    while len(queue) > 0:
+        node = queue.pop(0)
+        if node in relevant_modules:
+            continue
+
+        relevant_modules.add(node)
+        print(f"Processing {node}, queue len: {len(queue)} ")
+
+        p = parents[node]
+        queue += p
+        for pi in p:
+            if pi not in relevant_modules and pi not in queue:
+                queue.append(pi)
+    
+    print(relevant_modules)
+    print(f"Reduced network contains {len(relevant_modules)} modules")
+    quit()
     # queue of pulses to process
     print("========================")
     num_low, num_high = 0, 0
@@ -210,6 +250,7 @@ def part_2(lines):
             print(f"Step {i} ==============")
 
         pulses = [('button', 'broadcaster', Pulse.LOW)]
+
         while not target_found and len(pulses) > 0:
             # process pulse
             src, dest, pulse = pulses.pop(0)
