@@ -76,9 +76,6 @@ class BroadcastModule(Module):
         return super().get_output(pulse)
         
 def part_1(lines):
-    # parse input
-    total = 0
-
     network = {}
     broadcastModule = BroadcastModule('broadcaster')
     network[broadcastModule.name] = broadcastModule
@@ -87,6 +84,7 @@ def part_1(lines):
     pattern = r'([%&])?(.*) -> (.*)'
     conj_modules = []
 
+    # parse input
     for line in lines:
         line = line.strip()
         matches = re.findall(pattern, line)
@@ -152,8 +150,89 @@ def part_1(lines):
     return num_low*num_high
     
 def part_2(lines):
-    total = 0
-    return total
+    network = {}
+    broadcastModule = BroadcastModule('broadcaster')
+    network[broadcastModule.name] = broadcastModule
+    parents = {}
+
+    pattern = r'([%&])?(.*) -> (.*)'
+    conj_modules = []
+
+    # parse input
+    for line in lines:
+        line = line.strip()
+        matches = re.findall(pattern, line)
+        match = matches[0]
+
+        module_type, src, dest = match
+        dest = dest.split(',')
+        dest = [d.strip() for d in dest]
+        #print(f"Adding {module_type} -{src}-> {dest}")
+        if module_type == '%':
+            # flip flop
+            flipFlopModule = FlipFlopModule(src)
+            network[src] = flipFlopModule
+            flipFlopModule.add_dest_modules(dest)
+        elif module_type == '&':
+            # conjunction
+            conjunctionModule = ConjunctionModule(src)
+            network[src] = conjunctionModule
+            conjunctionModule.add_dest_modules(dest)
+            conj_modules.append(conjunctionModule)
+        else:
+            # broadcast
+            network[src].add_dest_modules(dest)
+
+        for d in dest:
+            if d not in parents:
+                parents[d] = [src]
+            else:
+                parents[d].append(src)
+
+        for d in dest:
+            if d not in network:
+                network[d] = None
+        
+    # populate conjunction modules
+    for conj_module in conj_modules:
+        mod_parents = [network[p] for p in parents[conj_module.name]]
+        #print(f"Conjunction {conj_module.name} parents: {[p.name for p in mod_parents]}")
+        conj_module.add_parent_modules(mod_parents)
+    
+    # queue of pulses to process
+    print("========================")
+    num_low, num_high = 0, 0
+    i = 0
+    target_found = False
+    while not target_found:
+        i += 1
+        if i % 10000 == 0:
+            print(f"Step {i} ==============")
+
+        pulses = [('button', 'broadcaster', Pulse.LOW)]
+        while not target_found and len(pulses) > 0:
+            # process pulse
+            src, dest, pulse = pulses.pop(0)
+            if pulse == Pulse.LOW:
+                num_low += 1
+            else:
+                num_high += 1
+            #print(f"{src} -{pulse}-> {dest}")
+            if network[dest] is None:
+                #print(f"Network {dest} is None")
+                continue
+            new_pulses = network[dest].input(pulse)
+            for p in new_pulses:
+                _, dest, val = p
+                if dest == 'rx' and val == Pulse.LOW:
+                    target_found = True
+                    break
+                
+            pulses.extend(new_pulses)
+            #print(pulses)
+
+    print(f"num_low: {num_low}, num_high: {num_high}")
+    return num_low*num_high
     
 
 if __name__ == '__main__':
@@ -183,8 +262,8 @@ if __name__ == '__main__':
     input_vals = part_1(input_lines)
     print(f"Real output: {input_vals}")
 
-    #print("Part 2 ======================")
+    print("Part 2 ======================")
     #test_vals = part_2(test_lines)
     #print(f"Test output: {test_vals}")
-    #input_vals = part_2(input_lines)
-    #print(f"Real output: {input_vals}")
+    input_vals = part_2(input_lines)
+    print(f"Real output: {input_vals}")
