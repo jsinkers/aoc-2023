@@ -66,23 +66,27 @@ def part_2(lines, num_steps=26501365):
             grid[y][x] = 'O'
         print_grid(grid)
 
-    current_positions = set([start])
+    visited = set()
+    frontier = set([start])
     for i in range(num_steps):
-        new_positions = set()
-        for position in current_positions:
-            x, y = position
+        new_frontier = set()
+        for x, y in frontier:
+            #x, y = frontier.pop()
+            visited.add((x, y))
             # try to move up, down, left, right
             candidate_posns = [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
             for x, y in candidate_posns:
                 if garden[y % num_rows][x % num_cols] in '.S':
-                    new_positions.add((x, y))
-
-        current_positions = new_positions
-        print(f"Step {i+1}: num positions={len(current_positions)}")
+                    if (x, y) not in visited:
+                        new_frontier.add((x, y))
+            
+        frontier = new_frontier
+        #print(f"Num visited={len(visited)}")
+        print(f"Step {i+1}: frontier posns={len(frontier)}")
 
     #print_garden(current_positions)
    
-    return len(current_positions) 
+    return len(visited) 
     
 
 if __name__ == '__main__':
@@ -99,7 +103,7 @@ if __name__ == '__main__':
     print(f"Real output: {input_vals}")
 
     #print("Part 2 ======================")
-    test_vals = part_2(test_lines, num_steps=1000)
+    test_vals = part_2(test_lines, num_steps=6)
     print(f"Test output: {test_vals}")
     #input_vals = part_2(input_lines)
     #print(f"Real output: {input_vals}")
