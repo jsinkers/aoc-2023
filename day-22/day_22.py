@@ -54,7 +54,7 @@ def part_1(lines):
         moved_bricks.append(((x1, y1, z1), (x2, y2, z2)))
 
 
-    def print_grid(direction):
+    def print_grid(direction, convert=True):
         # generate grid
         print(direction)
         if direction == 'xz':
@@ -66,7 +66,10 @@ def part_1(lines):
         # fill in bricks
         for i, brick in enumerate(moved_bricks):
             # assign a single character label to each brick
-            label = chr(ord('A') + i)  # generate label
+            if convert:
+                label = chr(ord('A') + i)  # generate label
+            else:
+                label = 'x'
             coords1, coords2 = brick
             x1, y1, z1 = coords1
             x2, y2, z2 = coords2
@@ -91,10 +94,12 @@ def part_1(lines):
         print('============')
 
     #print(moved_bricks)
-    print_grid('xz')
-    print_grid('yz')
+    print_grid('xz', convert=False)
+    print_grid('yz', convert=False)
 
     # now see if the brick is safe to disintegrate - i.e. is not supporting any bricks directly above it
+    supported_by = [[] for _ in range(len(moved_bricks))]
+    supporting_list = [[] for _ in range(len(moved_bricks))]
     for i, brick in enumerate(moved_bricks):
         coords1, coords2 = brick
         x1, y1, z1 = coords1
@@ -105,6 +110,8 @@ def part_1(lines):
             continue
 
         for j, brick2 in enumerate(moved_bricks[i+1:]):
+            ind = i + j + 1
+            #print(f"checking brick {i} against brick {ind}")
             coords3, coords4 = brick2
             x3, y3, z3 = coords3
             x4, y4, z4 = coords4
@@ -114,7 +121,6 @@ def part_1(lines):
                 continue
             elif z3 > z2 + 1:
                 # we're now higher up - no more bricks to check
-                # no brick found
                 break
             elif z3 == z2 + 1:
                 # is there overlap in x and y?
@@ -125,15 +131,31 @@ def part_1(lines):
                             break
                     if supporting:
                         break
-        
-        if not supporting:
-            print(f"Brick {i} is safe to disintegrate")
 
-        else:
-            print(f"Brick {i} is NOT safe to disintegrate")
-        
-    total = 0
-    return total
+            if supporting:
+                #print(f"brick {i} supports brick {ind}")
+                supported_by[ind].append(i)
+                supporting_list[i].append(ind)
+                supporting = False
+            
+    # now determine if safe to disintegrate
+    def safe_to_disintegrate(brick):
+        for supported in supporting_list[brick]:
+            if len(supported_by[supported]) <= 1:
+                return False
+
+        return True
+
+    num_to_disintegrate = 0
+    for i in range(len(moved_bricks)):
+        #label = chr(ord('A') + i)  # generate label
+        #bricks = [chr(ord('A') + b) for b in supported_by[i]]
+        #print(f"{label}: {bricks}")
+        if safe_to_disintegrate(i):
+            #print(f"Brick {label} is safe to disintegrate")
+            num_to_disintegrate += 1
+
+    return num_to_disintegrate
     
 def part_2(lines):
     total = 0
@@ -150,8 +172,8 @@ if __name__ == '__main__':
     print("Part 1 ======================")
     test_vals = part_1(test_lines)
     print(f"Test output: {test_vals}")
-    #input_vals = part_1(input_lines)
-    #print(f"Real output: {input_vals}")
+    input_vals = part_1(input_lines)
+    print(f"Real output: {input_vals}")
 
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
