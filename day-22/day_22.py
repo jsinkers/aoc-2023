@@ -30,8 +30,8 @@ def part_1(lines):
         min_z, coords1, coords2 = heapq.heappop(bricks)
         x1, y1, z1 = coords1
         x2, y2, z2 = coords2
-        print(f"Brick {i}: {coords1} ~ {coords2}")
-        print(height_envelope)
+        #print(f"Brick {i}: {coords1} ~ {coords2}")
+        #print(height_envelope)
         # look at the max of the envelope restricted to the x, y coords of the brick
         envelope_max = 0
         for x in range(x1, x2+1):
@@ -40,30 +40,19 @@ def part_1(lines):
 
         # move the brick down to that height + 1
         diff = min_z - envelope_max - 1
-        print(diff)
+        #print(diff)
         z1 -= diff
         z2 -= diff
 
         # reset the envelope to account for the brick
         for x in range(x1, x2+1):
             for y in range(y1, y2+1):
-                print(f"{x}, {y}")
+                #print(f"{x}, {y}")
                 height_envelope[y][x] = max(z1, z2, height_envelope[y][x])
         
         # add the brick to the moved bricks
         moved_bricks.append(((x1, y1, z1), (x2, y2, z2)))
 
-    print(moved_bricks)
-    # make a grid from the brick coords
-    #grid = [[['.' for _ in range(max_z+1)] for _ in range(max_y+1)] for _ in range(max_x+1)]
-    #for brick in bricks:
-    #    coords1, coords2 = brick
-    #    x1, y1, z1 = coords1
-    #    x2, y2, z2 = coords2
-    #    for x in range(x1, x2+1):
-    #        for y in range(y1, y2+1):
-    #            for z in range(z1, z2+1):
-    #                grid[x][y][z] = '#'
 
     def print_grid(direction):
         # generate grid
@@ -101,8 +90,48 @@ def part_1(lines):
         print('\n'.join(g))
         print('============')
 
+    #print(moved_bricks)
     print_grid('xz')
     print_grid('yz')
+
+    # now see if the brick is safe to disintegrate - i.e. is not supporting any bricks directly above it
+    for i, brick in enumerate(moved_bricks):
+        coords1, coords2 = brick
+        x1, y1, z1 = coords1
+        x2, y2, z2 = coords2
+        # brick_envelope
+        supporting = False
+        if i == len(moved_bricks) - 1:
+            continue
+
+        for j, brick2 in enumerate(moved_bricks[i+1:]):
+            coords3, coords4 = brick2
+            x3, y3, z3 = coords3
+            x4, y4, z4 = coords4
+            # check if brick2 is directly above brick
+            if z3 == z2:
+                # at same height
+                continue
+            elif z3 > z2 + 1:
+                # we're now higher up - no more bricks to check
+                # no brick found
+                break
+            elif z3 == z2 + 1:
+                # is there overlap in x and y?
+                for x in range(x3, x4+1):
+                    for y in range(y3, y4+1):
+                        if x1 <= x <= x2 and y1 <= y <= y2:
+                            supporting = True
+                            break
+                    if supporting:
+                        break
+        
+        if not supporting:
+            print(f"Brick {i} is safe to disintegrate")
+
+        else:
+            print(f"Brick {i} is NOT safe to disintegrate")
+        
     total = 0
     return total
     
