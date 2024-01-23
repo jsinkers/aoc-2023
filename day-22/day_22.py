@@ -166,10 +166,9 @@ def part_1(lines, convert=True):
 
     return num_to_disintegrate
     
-def part_2(lines):
+def part_2(lines, output_graph=False):
     # parse input
     bricks = []
-    #heapq.heapify(bricks)
 
     max_x, max_y, max_z = 0, 0, 0
     for line in lines:
@@ -184,7 +183,6 @@ def part_2(lines):
         coords1 = (x1, y1, z1)
         coords2 = (x2, y2, z2)
         # insert brick using min_z as priority
-        #heapq.heappush(bricks, (z1, coords1, coords2))
         bricks.append((coords1, coords2))
         max_x = max(max_x, x1, x2)
         max_y = max(max_y, y1, y2)
@@ -271,13 +269,27 @@ def part_2(lines):
             if i not in supported_by[j]:
                 raise ValueError(f"Brick {i} supports {j} but {j} is not supported by {i}")
 
-
+    # output graphviz data for supported_by
+    def generate_graphviz_data():
+        graphviz_data = "digraph G {\n"
+        for i, supported in enumerate(supported_by):
+            for j in supported:
+                graphviz_data += f"    {i} -> {j};\n"
+        graphviz_data += "}"
+        return graphviz_data
+    
+    if output_graph:
+        graphviz = generate_graphviz_data()
+        with open('graphviz.txt', 'w') as f:
+            print(graphviz, file=f)
+    
     def num_to_fall(brick_to_remove):
         # going from the brick to remove, traverse the graph of bricks that it supports, and remove
         # the edge
         supported_by_copy = deepcopy(supported_by)
+        supported_by_copy[brick_to_remove] = []
         queue = [brick_to_remove]
-        counter = 0
+        fallen = set()
         visited = []
 
         # bfs over the supporting graph
@@ -287,12 +299,17 @@ def part_2(lines):
                 continue
 
             # check if brick is supported by any bricks
-            print(f"Considering brick {b}: supported by {supported_by_copy[b]}")
+            #print(f"Considering brick {b}: supported by {supported_by_copy[b]}")
             if len(supported_by_copy[b]) == 0:
                 # if not increment the counter and mark visited
-                counter += 1
+                #counter += 1
+                #if len(fallen) == 0:
+                #    print(f"Removing {brick_to_remove}")
+
+                fallen.add(b)
+                #print(f"Brick {b} falls, count={len(fallen)}")
                 visited.append(b)
-                print(f"Brick {b} falls, count={counter}")
+                #print(f"Brick {b} falls, count={counter}")
 
                 # as it's going to fall, we now need to remove this brick as a support from 
                 # the bricks it previously supported
@@ -301,28 +318,20 @@ def part_2(lines):
                         supported_by_copy[s].remove(b)
                         queue.append(s)
             
-        return counter
+        return len(fallen) - 1
         #return [len(s) for s in supported_by_copy].count(0) + 1
         
-    def num_on_ground(brick):
-        count = 0
-        for b in moved_bricks:
-            coords1, coords2 = b
-            x1, y1, z1 = coords1
-            x2, y2, z2 = coords2
-            if z1 == 1 and b != brick:
-                count += 1
-        
-        return count
-            
     max_to_fall = 0
+    total = 0
     for brick in range(num_bricks):
         #print(f"{brick}: supports {supporting_list[brick]}, supported_by {supported_by[brick]}")
-        count = num_to_fall(brick) #- num_on_ground(brick)
-        print(f"Brick {brick} has {count} bricks to fall")
+        count = num_to_fall(brick) 
+        if count > 0:
+            print(f"Brick {brick} has {count} bricks to fall")
+        total += count
         max_to_fall = max(max_to_fall, count)
 
-    return max_to_fall
+    return total
     
 
 if __name__ == '__main__':
@@ -355,6 +364,8 @@ if __name__ == '__main__':
 
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
+    print(f"Test output: {test_vals}\n")
+    test_vals = part_2(test_2_lines)
     print(f"Test output: {test_vals}")
-    input_vals = part_2(input_lines)
+    input_vals = part_2(input_lines, output_graph=True)
     print(f"Real output: {input_vals}")
