@@ -88,8 +88,8 @@ def part_2(lines):
     # each node is a location 
     # each edge is weighted by path_length between each location
     # queue items are (prev node location, current location, current distance from prev node)
-    queue = [(start, (start[0], start[1]+1), 1, [start])]
-    visited = set([start])
+    queue = [(start, start, 0, [])]
+    expanded = set()
     # graph is a dict of nodes and their neighbours with the distance between them
     graph = {start: []}
 
@@ -100,6 +100,12 @@ def part_2(lines):
         #print(f"{node1} {current_pos} {distance} {path}")
         x, y = current_pos
 
+        # need to check that node has been expanded from the same direction
+        if (node1, current_pos) in expanded:
+            continue
+        
+        expanded.add((node1, current_pos))
+
         neighbours = []
         for nx, ny in get_neighbours(x, y):
             if out_of_bounds(nx, ny) or grid[ny][nx] == '#' or (nx, ny) in path:
@@ -107,9 +113,8 @@ def part_2(lines):
         
             neighbours.append((nx, ny))
         
-        # if there's more than 1 neighbour we have a new node
+        # if there's more than 1 neighbour we have a new node (or if we are at the end)
         if len(neighbours) > 1 or current_pos == target:
-            #print(current_pos)
             if node1 not in graph.keys():
                 graph[node1] = []
 
@@ -119,9 +124,12 @@ def part_2(lines):
         else:
             distance += 1
         
-        # now explore the neighbours
         for nx, ny in neighbours:
             queue.append((node1, (nx, ny), distance, path + [current_pos]))
+
+        
+        # need to prevent expanding the same node multiple times 
+        # for some reason adding this where I would expect it to work seems to cause graph not to be generated correctly
 
     print(graph)
     # now we have the reduced graph, determine the longest path
@@ -129,11 +137,11 @@ def part_2(lines):
     paths_to_end = []
 
     while len(queue) > 0:
-        #print(f"Queue length: {len(queue)}")
+        print(f"Queue length: {len(queue)}")
         distance, node, path = queue.pop()
-        print(f"priority: {distance}")
+        #print(f"priority: {distance}")
 
-        print(f"{node}, path: {path}")
+        #print(f"{node}, path: {path}")
         if node not in graph.keys():
             print(f"Node not in graph {node}")
             continue
@@ -150,7 +158,7 @@ def part_2(lines):
                 queue.append((new_dist, neighbour, new_path))
 
     paths_to_end.sort(key=lambda x: x[1], reverse=True)
-    print(paths_to_end)
+    #print(paths_to_end)
     longest = paths_to_end[0][1]
     
     return longest
@@ -172,5 +180,5 @@ if __name__ == '__main__':
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
     print(f"Test output: {test_vals}")
-    #input_vals = part_2(input_lines)
-    #print(f"Real output: {input_vals}")
+    input_vals = part_2(input_lines)
+    print(f"Real output: {input_vals}")
