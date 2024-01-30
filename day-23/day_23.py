@@ -1,6 +1,6 @@
 import re
 from copy import deepcopy
-
+import heapq
 
 def print_grid(grid):
     grid = deepcopy(grid)
@@ -84,29 +84,75 @@ def part_2(lines):
     def out_of_bounds(x, y):
         return x < 0 or y < 0 or x >= len(grid) or y >= len(grid[0])
 
-    queue = [(start, [])]
+    # convert map to graph
+    # each node is a location 
+    # each edge is weighted by path_length between each location
+    # queue items are (prev node location, current location, current distance from prev node)
+    queue = [(start, (start[0], start[1]+1), 1)]
+    visited = set([start])
+    # graph is a dict of nodes and their neighbours with the distance between them
+    graph = {start: []}
+
+    # run bfs on map
+    # every time a new node is found, add it to the graph
+    while len(queue) > 0:
+        node1, current_pos, distance = queue.pop(0)
+        #print(f"Visited: {visited}")
+        x, y = current_pos
+        if current_pos in visited:
+            continue
+
+        visited.add(current_pos)
+
+        neighbours = []
+        for nx, ny in get_neighbours(x, y):
+            if out_of_bounds(nx, ny) or grid[ny][nx] == '#' or (nx, ny) in visited:
+                continue
+        
+            neighbours.append((nx, ny))
+        
+        # if there's more than 1 neighbour we have a new node
+        if len(neighbours) > 1:
+            if node1 not in graph.keys():
+                graph[node1] = []
+
+            graph[node1].append((current_pos, distance))
+            node1 = current_pos
+            distance = 1
+        else:
+            distance += 1
+        
+        # now explore the neighbours
+        for nx, ny in neighbours:
+            queue.append((node1, (nx, ny), distance))
+
+    print(graph)
+    exit()
+    queue = [(0, start, [])]
+    heapq.heapify(queue)
     longest = 0
     longest_path = []
     slope_dx = {'^': (0, -1), '>': (1, 0), 'v': (0, 1), '<': (-1, 0)}
 
     while len(queue) > 0:
         #print(f"Queue length: {len(queue)}")
-        (x, y), path = queue.pop(0)
+        priority, (x, y), path = heapq.heappop(queue)
+        print(f"priority: {priority}")
 
-
-        if (x, y) == target:
-            if len(path) > longest:
-                longest = len(path)
-                longest_path = path
-                print(f"Longest path: {longest}")
 
         #print(f"y: {y}, x: {x}, path: {path}")
         for nx, ny in get_neighbours(x, y):
             if out_of_bounds(nx, ny) or grid[ny][nx] == '#' or (nx, ny) in path:
                 continue
                 
-            queue.append(((nx, ny), path + [(nx, ny)]))
-            
+            if (nx, ny) == target:
+                if len(path) + 1 > longest:
+                    longest = len(path) + 1
+                    longest_path = path.append((nx, ny))
+                    print(f"Longest path: {longest}")
+                    return longest
+            heapq.heappush(queue, (-len(path), (nx, ny), path + [(nx, ny)]))
+
     
     for x, y in longest_path:
         grid[y][x] = 'O'
