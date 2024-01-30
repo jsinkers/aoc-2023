@@ -100,11 +100,12 @@ def part_2(lines):
         #print(f"{node1} {current_pos} {distance} {path}")
         x, y = current_pos
 
-        # need to check that node has been expanded from the same direction
-        if (node1, current_pos) in expanded:
+        # need to check that node has been expanded from the same position
+        last = path[-1] if len(path) > 0 else None
+        if (last, current_pos) in expanded:
             continue
         
-        expanded.add((node1, current_pos))
+        expanded.add((last, current_pos))
 
         neighbours = []
         for nx, ny in get_neighbours(x, y):
@@ -135,9 +136,10 @@ def part_2(lines):
     # now we have the reduced graph, determine the longest path
     queue = [(0, start, [])]
     paths_to_end = []
+    longest_distance = 0
 
     while len(queue) > 0:
-        print(f"Queue length: {len(queue)}")
+        #print(f"Queue length: {len(queue)}")
         distance, node, path = queue.pop()
         #print(f"priority: {distance}")
 
@@ -153,9 +155,12 @@ def part_2(lines):
             new_path = path + [neighbour]
             new_dist = distance + step_dist
             if neighbour == target:
+                longest_distance = max(longest_distance, new_dist)
+                print(f"Longest distance: {longest_distance}")
                 paths_to_end.append((new_path, new_dist))
             else:
                 queue.append((new_dist, neighbour, new_path))
+                #heapq.heappush(queue, (new_dist, neighbour, new_path))
 
     paths_to_end.sort(key=lambda x: x[1], reverse=True)
     #print(paths_to_end)
@@ -180,5 +185,5 @@ if __name__ == '__main__':
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
     print(f"Test output: {test_vals}")
-    input_vals = part_2(input_lines)
-    print(f"Real output: {input_vals}")
+    #input_vals = part_2(input_lines)
+    #print(f"Real output: {input_vals}")
