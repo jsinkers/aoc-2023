@@ -134,39 +134,43 @@ def part_2(lines):
 
     print(graph)
     # now we have the reduced graph, determine the longest path
-    queue = [(0, start, [])]
-    paths_to_end = []
+    queue = [(0, start)]
+
     longest_distance = 0
+
+    visited = set()
 
     while len(queue) > 0:
         #print(f"Queue length: {len(queue)}")
-        distance, node, path = queue.pop()
-        #print(f"priority: {distance}")
+        distance, node = queue.pop()
+        #print(f"Distance: {distance}, Node: {node}")
 
-        #print(f"{node}, path: {path}")
-        if node not in graph.keys():
-            print(f"Node not in graph {node}")
+        # if we've explored all paths from this node, remove it from visited
+        if distance == None:
+            visited.remove(node)
             continue
 
-        for neighbour, step_dist in graph[node]:
-            if neighbour in path:
-                continue
-                
-            new_path = path + [neighbour]
-            new_dist = distance + step_dist
-            if neighbour == target:
-                longest_distance = max(longest_distance, new_dist)
-                print(f"Longest distance: {longest_distance}")
-                paths_to_end.append((new_path, new_dist))
-            else:
-                queue.append((new_dist, neighbour, new_path))
-                #heapq.heappush(queue, (new_dist, neighbour, new_path))
+        # if we're at the end, update the longest distance
+        if node == target:
+            longest_distance = max(longest_distance, distance)
+            print(f"Longest distance: {longest_distance}")
+            continue
+        
+        # if already visited, don't explore
+        if node in visited:
+            continue
 
-    paths_to_end.sort(key=lambda x: x[1], reverse=True)
-    #print(paths_to_end)
-    longest = paths_to_end[0][1]
-    
-    return longest
+        # mark as visited
+        visited.add(node)
+        # add node back into queue so we can see when all children are explored
+        queue.append((None, node))
+
+        # explore neighbours
+        for neighbour, step_dist in graph[node]:
+            new_dist = distance + step_dist
+            queue.append((new_dist, neighbour))
+
+    return longest_distance
     
 
 if __name__ == '__main__':
@@ -185,5 +189,5 @@ if __name__ == '__main__':
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
     print(f"Test output: {test_vals}")
-    #input_vals = part_2(input_lines)
-    #print(f"Real output: {input_vals}")
+    input_vals = part_2(input_lines)
+    print(f"Real output: {input_vals}")
