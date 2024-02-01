@@ -132,7 +132,15 @@ def part_2(lines):
         # need to prevent expanding the same node multiple times 
         # for some reason adding this where I would expect it to work seems to cause graph not to be generated correctly
 
-    print(graph)
+    graph = dict(sorted(graph.items()))
+
+    for k, v in graph.items():
+        y, x = k
+        print(f"{x}, {y}:")
+        for (c, r), d in v:
+            print(f"\t{c}, {r}, {d}")
+        
+    quit()
     # now we have the reduced graph, determine the longest path
     queue = [(0, start)]
 
@@ -186,8 +194,8 @@ if __name__ == '__main__':
     #input_vals = part_1(input_lines)
     #print(f"Real output: {input_vals}")
 
-    print("Part 2 ======================")
-    test_vals = part_2(test_lines)
-    print(f"Test output: {test_vals}")
+    #print("Part 2 ======================")
+    #test_vals = part_2(test_lines)
+    #print(f"Test output: {test_vals}")
     input_vals = part_2(input_lines)
     print(f"Real output: {input_vals}")
