@@ -56,9 +56,37 @@ def part_1(lines, min_p=7, max_p=27):
     return num_inside
     
 def part_2(lines):
-    total = 0
-    return total
+    # parse input "px py pz @ vx vy vz"
+    # velocities are distance/nanosecond
+    hailstones = []
+    for line in lines:
+        position, velocity = line.split('@')
+        position = position.split(',')
+        position = [int(x) for x in position]
+        velocity = velocity.split(',')
+        velocity = [int(x) for x in velocity]
+        hailstones.append((position, velocity))
     
+    # unknowns: rx, ry, rz, ru, rv, rw, t
+    rx, ry, rz, ru, rv, rw = sp.symbols('rx ry rz ru rv rw')
+    t_symbols = []
+    equations = []
+    for i, hailstone in enumerate(hailstones[:3]):
+        print(i)
+        pos, vel = hailstone
+        x, y, z = pos
+        u, v, w = vel
+        t = sp.Symbol(f"t{i}")
+        t_symbols.append(t)
+        eqx = sp.Eq(x + t * u, rx + t * ru)
+        eqy = sp.Eq(y + t * v, ry + t * rv)
+        eqz = sp.Eq(z + t * w, rz + t * rw)
+        equations.append(eqx)
+        equations.append(eqy)
+        equations.append(eqz)
+
+    soln = sp.solve(equations, (rx, ry, rz, ru, rv, rw) + tuple(t_symbols))
+    return sum(soln[0][:3])
 
 if __name__ == '__main__':
     with open('test.txt', 'r') as f:
@@ -70,8 +98,8 @@ if __name__ == '__main__':
     print("Part 1 ======================")
     test_vals = part_1(test_lines)
     print(f"Test output: {test_vals}")
-    input_vals = part_1(input_lines, min_p=200000000000000, max_p=400000000000000)
-    print(f"Real output: {input_vals}")
+    #input_vals = part_1(input_lines, min_p=200000000000000, max_p=400000000000000)
+    #print(f"Real output: {input_vals}")
 
     print("Part 2 ======================")
     test_vals = part_2(test_lines)
